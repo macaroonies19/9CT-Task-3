@@ -1,39 +1,31 @@
+# main.py
+from pathlib import Path
 from data_module import (
-    display_dataset_preview,
-    display_visualisation,
-    search_data,
-    update_data_entry,
-    save_changes
+    load_dwellings_csv,
+    add_growth_and_ma,
+    summarize_series,
+    plot_trend_vs_sa,
+    plot_sa_qoq,
+    plot_sa_with_ma,
 )
 
-def main_menu():
-    while True:
-        print("\n=== Data Viewer Interface ===")
-        print("1. View dataset")
-        print("2. View visualisation")
-        print("3. Search or filter data")
-        print("4. Update a data entry")
-        print("5. Save changes")
-        print("6. Exit")
+CSV_PATH = "Total dwellings commenced (1) (1).csv"
 
-        choice = input("Select an option (1-6): ").strip()
+def main():
+    df = load_dwellings_csv(CSV_PATH)
+    df = add_growth_and_ma(df)
 
-        if choice == '1':
-            display_dataset_preview()
-        elif choice == '2':
-            display_visualisation()
-        elif choice == '3':
-            search_data()
-        elif choice == '4':
-            update_data_entry()
-        elif choice == '5':
-            save_changes()
-            print("Changes saved.")
-        elif choice == '6':
-            print("Exiting program.")
-            break
-        else:
-            print("Invalid selection. Please choose a number between 1 and 6.")
+    summary = summarize_series(df)
+    print(f"Latest period: {summary['latest_period']}")
+    print(f"Latest Trend: {summary['latest_trend']:,}")
+    print(f"Latest Seasonally adjusted: {summary['latest_sa']:,}")
+    print(f"Peak Trend: {summary['trend_peak']:,} ({summary['trend_peak_period']})")
+    print(f"Peak Seasonally adjusted: {summary['sa_peak']:,} ({summary['sa_peak_period']})")
+
+    outdir = Path(".")
+    plot_trend_vs_sa(df, save_path=str(outdir / "dwellings_trend_vs_sa.png"))
+    plot_sa_qoq(df, save_path=str(outdir / "dwellings_sa_qoq.png"))
+    plot_sa_with_ma(df, save_path=str(outdir / "dwellings_sa_moving_avg.png"))
 
 if __name__ == "__main__":
-    main_menu()
+    main()
