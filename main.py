@@ -1,3 +1,4 @@
+# main.py
 from __future__ import annotations
 from pathlib import Path
 import sys
@@ -11,13 +12,16 @@ from data_module import (
     plot_sa_with_ma,
 )
 
+# Uses your known CSV in the same folder as this script
 CSV_PATH = Path(__file__).with_name("Total dwellings commenced (1) (1).csv")
 OUTDIR = Path("figures")
+
 
 def print_header():
     print("=" * 64)
     print("Dwelling Data — Terminal Explorer")
     print("=" * 64)
+
 
 def print_menu():
     print("\nChoose an option:")
@@ -27,13 +31,16 @@ def print_menu():
     print("  4) Export cleaned dataset with metrics (CSV)")
     print("  5) Exit")
 
+
 def ensure_data():
     if not CSV_PATH.exists():
         print(f"\nERROR: CSV not found at: {CSV_PATH.name}")
+        print("Place the CSV in the same folder as this script and try again.")
         sys.exit(1)
     df = load_dwellings_csv(str(CSV_PATH))
     df = add_growth_and_ma(df)
     return df
+
 
 def show_latest_summary(df):
     s = summarize_series(df)
@@ -51,6 +58,7 @@ def show_latest_summary(df):
     if s['sa_yoy_pct'] is not None:
         print(f"YoY (Seasonally adjusted): {s['sa_yoy_pct']:.2f}%")
 
+
 def show_extremes(df):
     s = summarize_series(df)
     print("\nPeaks and troughs")
@@ -60,15 +68,46 @@ def show_extremes(df):
     print(f"Peak Seasonally adjusted: {s['sa_peak']:,} ({s['sa_peak_period']})")
     print(f"Trough Seasonally adjusted: {s['sa_trough']:,} ({s['sa_trough_period']})")
 
+
 def generate_charts(df):
     OUTDIR.mkdir(parents=True, exist_ok=True)
-    plot_trend_vs_sa(df, save_path=str(OUTDIR / "dwellings_trend_vs_sa.png"))
-    plot_sa_qoq(df, save_path=str(OUTDIR / "dwellings_sa_qoq.png"))
-    plot_sa_with_ma(df, save_path=str(OUTDIR / "dwellings_sa_moving_avg.png"))
+    plot_trend_vs_sa(df, save_path=str(OUTDIR / "dwellings_trend_vs_sa.png"), show=False)
+    plot_sa_qoq(df, save_path=str(OUTDIR / "dwellings_sa_qoq.png"), show=False)
+    plot_sa_with_ma(df, save_path=str(OUTDIR / "dwellings_sa_moving_avg.png"), show=False)
     print(f"\nSaved charts to: {OUTDIR.resolve()}")
+    print(" - dwellings_trend_vs_sa.png")
+    print(" - dwellings_sa_qoq.png")
+    print(" - dwellings_sa_moving_avg.png")
+
 
 def export_cleaned(df):
     OUTDIR.mkdir(parents=True, exist_ok=True)
     out_csv = OUTDIR / "dwellings_clean_with_metrics.csv"
     df.to_csv(out_csv, index=False)
     print(f"\nExported cleaned dataset to: {out_csv.resolve()}")
+
+
+def main():
+    print_header()
+    df = ensure_data()
+
+    while True:
+        print_menu()
+        choice = input("\nEnter choice (1-5): ").strip()
+        if choice == "1":
+            show_latest_summary(df)
+        elif choice == "2":
+            show_extremes(df)
+        elif choice == "3":
+            generate_charts(df)
+        elif choice == "4":
+            export_cleaned(df)
+        elif choice == "5":
+            print("\nGoodbye.")
+            break
+        else:
+            print("Invalid choice. Please enter 1-5.")
+
+
+if __name__ == "__main__":
+    main()
